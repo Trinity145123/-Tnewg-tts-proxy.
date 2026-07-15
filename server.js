@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-
+const path = require('path');
 const app = express();
 
 // TEMPORARY: allow any origin so this works immediately during setup.
@@ -10,7 +10,7 @@ const app = express();
 // by pointing their own site at your proxy.
 app.use(cors({ origin: 'https://tnewg-tts-proxy.onrender.com' }));
 app.use(express.json({ limit: '1mb' }));
-
+app.use(express.static(path.join(__dirname)));
 const INWORLD_API_KEY = process.env.INWORLD_API_KEY;
 if (!INWORLD_API_KEY) {
   console.error('Missing INWORLD_API_KEY environment variable — set it before starting the server.');
@@ -103,6 +103,7 @@ app.post('/api/tts', async (req, res) => {
 });
 
 app.get('/health', (req, res) => res.json({ ok: true }));
-
+app.get('/', (req, res) =>
+  res.sendFile(path.join(__dirname, 'index.html')));
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Inworld TTS proxy listening on port ${PORT}`));
