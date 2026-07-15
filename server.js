@@ -8,7 +8,7 @@ const app = express();
 // Once your site has a final URL, replace '*' below with that exact URL
 // (e.g. 'https://yourdomain.com') so strangers can't ride on your API key
 // by pointing their own site at your proxy.
-app.use(cors({ origin: '*' }));
+app.use(cors({ origin: 'https://tnewg-tts-proxy.onrender.com' }));
 app.use(express.json({ limit: '1mb' }));
 
 const INWORLD_API_KEY = process.env.INWORLD_API_KEY;
