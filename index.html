@@ -3505,7 +3505,7 @@ el('muteBtn').addEventListener('click', () => {
    or if a call to it ever fails, the site automatically falls back to the
    browser's built-in voice for the rest of the session — it degrades
    gracefully rather than breaking. */
-const TTS_PROXY_URL = '';
+const TTS_PROXY_URL = 'https://tnewg-tts-proxy.onrender.com/api/tts';
 
 const INWORLD_VOICE_IDS = { khloe: 'Deborah', bob: 'Dennis' };
 let inworldAudioEl = null;
