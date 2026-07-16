@@ -6,8 +6,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
-const app = express();
-
 // TEMPORARY: allow any origin so this works immediately during setup.
 // Once your site has a final URL, replace '*' below with that exact URL
 // (e.g. 'https://yourdomain.com') so strangers can't ride on your API key
