@@ -4301,11 +4301,6 @@ async function showUpgradeWall(area) {
 function renderDT(){
   const area = el('dtQuestionArea');
 
-  // Paywall gate — free users get FREE_QUESTION_LIMIT questions
-  if (newgSubStatus !== 'active' && dtIndex >= FREE_QUESTION_LIMIT && dtIndex < DECISION_TREE.length) {
-    showUpgradeWall(area); return;
-  }
-
   if (dtIndex >= DECISION_TREE.length){
     let html = '<div class="dt-card"><h3 style="margin-top:0;">Your Personalized Summary</h3>';
     dtAnswers.forEach(a => {
