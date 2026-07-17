@@ -733,23 +733,18 @@
     </div>
 
     <div class="account-form" id="signupForm" style="display:none;">
-      <div class="account-disclaimer">
-        This is a demonstration screen. This site has no server, so accounts are not actually saved anywhere yet. Continuing will take you to the guide selection either way.
-      </div>
-      <input type="text" placeholder="Name" class="account-input">
-      <input type="email" placeholder="Email" class="account-input">
-      <input type="password" placeholder="Password" class="account-input">
-      <button type="button" class="account-btn primary" id="signupContinueBtn">Continue</button>
+      <input type="email" placeholder="Email" class="account-input" id="signupEmail">
+      <input type="password" placeholder="Password (min 8 characters)" class="account-input" id="signupPassword">
+      <div id="signupError" style="color:#e05252;font-size:0.85em;min-height:1.2em;margin-top:2px;"></div>
+      <button type="button" class="account-btn primary" id="signupContinueBtn">Create Account</button>
       <button type="button" class="account-back" id="signupBackBtn">Back</button>
     </div>
 
     <div class="account-form" id="loginForm" style="display:none;">
-      <div class="account-disclaimer">
-        This is a demonstration screen. This site has no server, so no account actually exists to log into yet. Continuing will take you to the guide selection either way.
-      </div>
-      <input type="email" placeholder="Email" class="account-input">
-      <input type="password" placeholder="Password" class="account-input">
-      <button type="button" class="account-btn primary" id="loginContinueBtn">Continue</button>
+      <input type="email" placeholder="Email" class="account-input" id="loginEmail">
+      <input type="password" placeholder="Password" class="account-input" id="loginPassword">
+      <div id="loginError" style="color:#e05252;font-size:0.85em;min-height:1.2em;margin-top:2px;"></div>
+      <button type="button" class="account-btn primary" id="loginContinueBtn">Log In</button>
       <button type="button" class="account-back" id="loginBackBtn">Back</button>
     </div>
   </div>
@@ -1352,8 +1347,70 @@ el('loginBackBtn').addEventListener('click', () => {
   el('accountChoiceButtons').style.display = 'flex';
 });
 el('continueGuestBtn').addEventListener('click', proceedToCharacterSelect);
-el('signupContinueBtn').addEventListener('click', proceedToCharacterSelect);
-el('loginContinueBtn').addEventListener('click', proceedToCharacterSelect);
+
+// --- Real auth ---
+async function checkSession() {
+  try {
+    const resp = await fetch('/api/me', { credentials: 'same-origin' });
+    if (resp.ok) { const d = await resp.json(); return d.email; }
+  } catch(e) {}
+  return null;
+}
+
+el('signupContinueBtn').addEventListener('click', async () => {
+  const email = el('signupEmail').value.trim();
+  const password = el('signupPassword').value;
+  const errDiv = el('signupError');
+  errDiv.textContent = '';
+  if (!email || !password) { errDiv.textContent = 'Please enter your email and password.'; return; }
+  el('signupContinueBtn').disabled = true;
+  el('signupContinueBtn').textContent = 'Creating account...';
+  try {
+    const resp = await fetch('/api/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ email, password })
+    });
+    const data = await resp.json();
+    if (!resp.ok) { errDiv.textContent = data.error || 'Signup failed.'; return; }
+    proceedToCharacterSelect();
+  } catch(e) {
+    errDiv.textContent = 'Network error — please try again.';
+  } finally {
+    el('signupContinueBtn').disabled = false;
+    el('signupContinueBtn').textContent = 'Create Account';
+  }
+});
+
+el('loginContinueBtn').addEventListener('click', async () => {
+  const email = el('loginEmail').value.trim();
+  const password = el('loginPassword').value;
+  const errDiv = el('loginError');
+  errDiv.textContent = '';
+  if (!email || !password) { errDiv.textContent = 'Please enter your email and password.'; return; }
+  el('loginContinueBtn').disabled = true;
+  el('loginContinueBtn').textContent = 'Logging in...';
+  try {
+    const resp = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ email, password })
+    });
+    const data = await resp.json();
+    if (!resp.ok) { errDiv.textContent = data.error || 'Login failed.'; return; }
+    proceedToCharacterSelect();
+  } catch(e) {
+    errDiv.textContent = 'Network error — please try again.';
+  } finally {
+    el('loginContinueBtn').disabled = false;
+    el('loginContinueBtn').textContent = 'Log In';
+  }
+});
+
+// Auto-skip account gate if already logged in
+checkSession().then(email => { if (email) proceedToCharacterSelect(); });
 
 renderStatic();
 renderLangModal();
