@@ -3450,6 +3450,8 @@ function renderLessonLangModal(){
 }
 
 
+const FREE_LESSON_IDS = new Set(['timeline','keep','scams','documents']);
+
 function renderTopics(){
   const topicsEl = el('topics');
   topicsEl.innerHTML = '';
@@ -3462,14 +3464,57 @@ function renderTopics(){
     const groupWrap = document.createElement('div');
     groupWrap.className = 'topic-group';
     lessons.filter(l => l.group[lang] === g).forEach(lesson => {
+      const isFree = FREE_LESSON_IDS.has(lesson.id);
       const btn = document.createElement('button');
       btn.className = 'topic-btn';
       btn.type = 'button';
       btn.textContent = lesson.title[lang];
-      btn.addEventListener('click', () => askLesson(lesson, null, btn));
+      if (!isFree) {
+        btn.innerHTML = lesson.title[lang] + ' <span style="font-size:12px;opacity:0.7;">🔒</span>';
+      }
+      btn.addEventListener('click', () => {
+        if (!isFree && newgSubStatus !== 'active') {
+          showLessonUpgradeWall();
+        } else {
+          askLesson(lesson, null, btn);
+        }
+      });
       groupWrap.appendChild(btn);
     });
     topicsEl.appendChild(groupWrap);
+  });
+}
+
+function showLessonUpgradeWall() {
+  const board = el('boardText');
+  const title = el('boardTitle');
+  title.textContent = 'Full Access Required';
+  board.innerHTML = `
+    <div style="padding:16px 0;">
+      <p style="margin:0 0 12px;">This lesson is available to <strong>Full Access</strong> members. Upgrade to unlock all lessons and guides.</p>
+      <ul style="margin:0 0 16px;padding-left:20px;color:#2a1d15;">
+        <li>All 10 lesson topics unlocked</li>
+        <li>Unlimited questions with Khloe</li>
+        <li>Worksheets & next steps guides</li>
+        <li>Full decision tree assessment</li>
+      </ul>
+      <button id="lessonUpgradeBtn" type="button" style="background:var(--wood);color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-bottom:8px;">Upgrade for $9.99/month</button>
+      <div id="lessonUpgradeError" style="color:#c0392b;font-size:0.85em;min-height:1em;"></div>
+    </div>
+  `;
+  document.getElementById('lessonUpgradeBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('lessonUpgradeBtn');
+    const errDiv = document.getElementById('lessonUpgradeError');
+    btn.disabled = true; btn.textContent = 'Loading...';
+    try {
+      const resp = await fetch('/api/create-checkout', { method: 'POST', credentials: 'same-origin' });
+      const data = await resp.json();
+      if (!resp.ok) { errDiv.textContent = data.error || 'Please log in to subscribe.'; btn.disabled = false; btn.textContent = 'Upgrade for $9.99/month'; return; }
+      window.location.href = data.url;
+    } catch(e) {
+      errDiv.textContent = 'Network error — please try again.';
+      btn.disabled = false; btn.textContent = 'Upgrade for $9.99/month';
+    }
   });
 }
 
